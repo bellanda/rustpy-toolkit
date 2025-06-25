@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "rustpy-toolkit"
-version = "0.1.0"
+version = "0.1.1"
 description = "High-performance Polars expressions for Brazilian document validation and text processing"
 readme = "README.md"
 requires-python = ">=3.8"
