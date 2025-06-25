@@ -1,15 +1,28 @@
+use std::sync::LazyLock;
+
 use polars::prelude::*;
 use pyo3_polars::derive::polars_expr;
 use regex::Regex;
+
+/// Pre-compiled regex patterns for phone validation (compiled only once)
+static PHONE_STRICT_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\+55\d{2}9?\d{8}$").unwrap());
+
+static PHONE_FLEXIBLE_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
+    vec![
+        Regex::new(r"^\+55\d{2}9\d{8}$").unwrap(), // +5516997184720
+        Regex::new(r"^\+55\d{2}\d{8}$").unwrap(),  // +551687184720 (sem o 9)
+        Regex::new(r"^55\d{2}9\d{8}$").unwrap(),   // 5516997184720
+        Regex::new(r"^0\d{2}9\d{8}$").unwrap(),    // 016997184720
+        Regex::new(r"^\d{2}9\d{8}$").unwrap(),     // 16997184720
+    ]
+});
 
 /// Função para validar telefone brasileiro
 /// Formatos aceitos: +5516997184720, +5511987654321, etc.
 /// Padrão: +55 + código de área (2 dígitos) + 9 (opcional) + número (8 dígitos)
 fn validate_phone_internal(phone: &str) -> bool
 {
-    // Regex para telefone brasileiro: +55 + área (2 dígitos) + 9 opcional + 8 dígitos
-    let re = Regex::new(r"^\+55\d{2}9?\d{8}$").unwrap();
-    re.is_match(phone)
+    PHONE_STRICT_REGEX.is_match(phone)
 }
 
 /// Função para validar telefone com formato mais flexível
@@ -18,18 +31,8 @@ fn validate_phone_flexible(phone: &str) -> bool
     // Remove espaços e caracteres especiais
     let clean_phone = phone.replace([' ', '-', '(', ')', '.'], "");
 
-    // Verifica diferentes formatos
-    let patterns = [
-        r"^\+55\d{2}9\d{8}$", // +5516997184720
-        r"^\+55\d{2}\d{8}$",  // +551687184720 (sem o 9)
-        r"^55\d{2}9\d{8}$",   // 5516997184720
-        r"^0\d{2}9\d{8}$",    // 016997184720
-        r"^\d{2}9\d{8}$",     // 16997184720
-    ];
-
-    patterns
-        .iter()
-        .any(|pattern| Regex::new(pattern).unwrap().is_match(&clean_phone))
+    // Usa regex pré-compiladas para verificar diferentes formatos
+    PHONE_FLEXIBLE_PATTERNS.iter().any(|regex| regex.is_match(&clean_phone))
 }
 
 /// Função para formatar telefone brasileiro
@@ -59,6 +62,7 @@ fn format_phone(phone: &str) -> String
 }
 
 /// Valida telefone brasileiro no formato +5516997184720
+/// Otimizado com regex pré-compiladas
 #[polars_expr(output_type=Boolean)]
 pub fn validate_phone(inputs: &[Series]) -> PolarsResult<Series>
 {
@@ -68,6 +72,7 @@ pub fn validate_phone(inputs: &[Series]) -> PolarsResult<Series>
 }
 
 /// Valida telefone brasileiro com formato mais flexível
+/// Otimizado com regex pré-compiladas
 #[polars_expr(output_type=Boolean)]
 pub fn validate_phone_flexible_expr(inputs: &[Series]) -> PolarsResult<Series>
 {
@@ -77,6 +82,7 @@ pub fn validate_phone_flexible_expr(inputs: &[Series]) -> PolarsResult<Series>
 }
 
 /// Formata telefone brasileiro
+/// Otimizado com validação eficiente
 #[polars_expr(output_type=String)]
 pub fn format_phone_expr(inputs: &[Series]) -> PolarsResult<Series>
 {
