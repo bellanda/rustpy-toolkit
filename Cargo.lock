@@ -521,17 +521,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "expression_lib"
-version = "0.1.0"
-dependencies = [
- "polars",
- "polars-arrow",
- "pyo3",
- "pyo3-polars",
- "serde",
-]
-
-[[package]]
 name = "fallible-streaming-iterator"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2441,6 +2430,18 @@ dependencies = [
  "ring",
  "rustls-pki-types",
  "untrusted",
+]
+
+[[package]]
+name = "rustpy-toolkit"
+version = "0.1.0"
+dependencies = [
+ "polars",
+ "polars-arrow",
+ "pyo3",
+ "pyo3-polars",
+ "regex",
+ "serde",
 ]
 
 [[package]]

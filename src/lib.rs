@@ -1,10 +1,13 @@
 use pyo3::prelude::*;
 
-mod expressions;
+// Módulos organizados por funcionalidade
+mod cpf_cnpj;
+mod phone;
+mod text_utils;
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn expression_lib(m: &Bound<'_, PyModule>) -> PyResult<()>
+fn _internal(m: &Bound<'_, PyModule>) -> PyResult<()>
 {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
