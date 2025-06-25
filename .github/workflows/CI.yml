@@ -1,12 +1,9 @@
 # Optimized CI for rustpy-toolkit
-# Focuses on most relevant architectures for better performance and reliability
+# Builds and releases only when tags are created
 name: CI
 
 on:
   push:
-    branches:
-      - main
-      - master
     tags:
       - "*"
   pull_request:
@@ -50,14 +47,13 @@ jobs:
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
-          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          sccache: "true"
           manylinux: auto
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-linux-${{ matrix.target }}
           path: dist
-          retention-days: 30
 
   # Windows builds - focus on x64 (most common)
   windows:
@@ -76,13 +72,12 @@ jobs:
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
-          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-windows-${{ matrix.target }}
           path: dist
-          retention-days: 30
 
   # macOS builds - both Intel and Apple Silicon
   macos:
@@ -104,13 +99,12 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
-          sccache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
-          retention-days: 30
 
   # Source distribution
   sdist:
@@ -127,9 +121,8 @@ jobs:
         with:
           name: wheels-sdist
           path: dist
-          retention-days: 30
 
-  # Release job - only runs on tags, downloads pre-built wheels
+  # Release job - publishes to PyPI
   release:
     name: Release
     runs-on: ubuntu-latest
